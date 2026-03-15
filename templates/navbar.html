@@ -1,0 +1,40 @@
+<!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <!-- Brand -->
+      <a class="navbar-brand" href="#">Placement Portal</a>
+
+      <!-- Toggle button for mobile -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Navbar links -->
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <!-- Company -->
+          <li class="nav-item">
+            <a class="nav-link" href="/companies">Company</a>
+          </li>
+          <!-- Students -->
+          <li class="nav-item">
+            <a class="nav-link" href="/students">Students</a>
+          </li>
+          <!-- Admin -->
+          <li class="nav-item">
+            <a class="nav-link" href="/admin">Admin</a>
+          </li>
+          <!-- Placement Applications -->
+          <li class="nav-item">
+            <a class="nav-link" href="/applications">Placement Applications</a>
+          </li>
+        </ul>
+
+        <!-- Search box -->
+        <form class="d-flex" role="search" action="{{ url_for('admin_search')}}" method="GET">
+          <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+      </div>
+    </div>
+  </nav>

@@ -8,7 +8,7 @@ from functools import wraps
 app = Flask(__name__)
 app.config.from_object(Config)
 
-db.init_app(app)
+db.init_app(app) #sql and flask ko integrate karke start kara h
 
 def create_db(admin_email='admin@college.local', admin_password='admin123'):
     
@@ -221,9 +221,92 @@ def logout():
 @app.route("/dashboard/admin")
 @role_required(Role.ADMIN)
 def admin_dashboard():
+    
+    total_students = Student.query.count()
+    total_companies = Company.query.count()
+    total_placementdrives = PlacementDrive.query.count()
+    total_applications = Application.query.count()   
+    
+    
+    
     pending_companies = Company.query.filter_by(approval_status=Approvalstatus.PENDING).all()
-    return render_template("AdminDashboard.html", pending_companies=pending_companies)
+    
+    all_companies = Company.query.all()
+    all_students = Student.query.all()
+    ongoing_drives = PlacementDrive.query.filter(PlacementDrive.application_deadline >= db.func.current_date()).all()
 
+    recent_applications = Application.query.order_by(Application.applied_at.desc()).limit(10).all()
+
+
+    return render_template("AdminDashboard.html", pending_companies=pending_companies,
+                            all_companies=all_companies, 
+                            all_students=all_students, 
+                            ongoing_drives=ongoing_drives, 
+                            recent_applications=recent_applications,
+                            total_students=total_students, 
+                           total_companies=total_companies, 
+                           total_drives=total_placementdrives, 
+                           total_applications=total_applications,
+                           admin_name=session['user_id'])
+    
+    
+@app.route("/admin/company/<int:id>/approve")
+@role_required(Role.ADMIN)
+def approve_company(id):
+    company = Company.query.get_or_404(id)
+    company.approval_status = Approvalstatus.APPROVED
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route("/admin/company/<int:id>/reject")
+@role_required(Role.ADMIN)
+def reject_company(id):
+    company = Company.query.get_or_404(id)
+    company.approval_status = Approvalstatus.REJECTED
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/company/<int:id>/blacklist")
+@role_required(Role.ADMIN)
+def blacklist_company(id):
+    company = Company.query.get_or_404(id)
+    company.approval_status = Approvalstatus.BLACKLISTED
+
+    for drive in company.drives:
+        drive.status = Drivestatus.COMPLETED
+        
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/student/<int:id>/toggle-blacklist", methods=["POST"])
+@role_required(Role.ADMIN)
+def toggle_blacklist(id):
+    student= Student.query.get_or_404(id)
+    student.blacklist = not student.blacklist
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/search")
+@role_required(Role.ADMIN)  
+def admin_search():
+    query = request.args.get('q', '') 
+    # search students and companies by name or email
+    student = Student.query.filter(
+    (Student.name.ilike(f'%{query}%')) |
+    (Student.email.ilike(f'%{query}%')) |
+    (Student.phone.ilike(f'%{query}%'))).all()
+
+    company = Company.query.filter(
+    (Company.name.ilike(f'%{query}%')) |
+    (Company.email.ilike(f'%{query}%'))).all()
+    return render_template("admin/search_results.html", students=student, companies=company, query=query)
+
+
+
+
+
+    
 # Student Dashboard
 @app.route("/dashboard/student")
 @role_required(Role.STUDENT)
@@ -238,14 +321,24 @@ def company_dashboard():
 
 # Admin approval
 
-@app.route("/admin/approve/<int:company_id>")
-@role_required(Role.ADMIN)
-def approve_company(company_id):
-    company = Company.query.get_or_404(company_id)
-    company.approval_status = Approvalstatus.APPROVED
-    db.session.commit()
+# @app.route("/admin/approve/<int:company_id>")
+# @role_required(Role.ADMIN)
+# def approve_company(company_id):
+#     company = Company.query.get_or_404(company_id)
+#     company.approval_status = Approvalstatus.APPROVED
+#     db.session.commit()
 
-    return redirect(url_for('AdminDashboard'))
+#     return redirect(url_for('AdminDashboard'))
+
+
+@app.route("/admin/drive/<int:id>/approve")
+@role_required(Role.ADMIN)
+def approve_drive(id):
+    drive = PlacementDrive.query.get_or_404(id)
+    drive.status = Drivestatus.UPCOMING
+    drive.approval_status = Approvalstatus.APPROVED
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
 
 
 # Application starts from here
