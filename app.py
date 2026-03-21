@@ -1,9 +1,13 @@
+from datetime import datetime
 from flask import Flask,request,session,redirect,url_for,render_template
 from db import db
 from config.config import Config
-from models.models import Admin, Company, Student, PlacementDrive, Application, Role, Approvalstatus,Drivestatus
+from models.models import Admin, Company, Student, PlacementDrive, Application, Role, Approvalstatus,Drivestatus,Applicationstatus
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from werkzeug.utils import secure_filename
+from flask import abort
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -96,14 +100,6 @@ def seed_data():
     print("Sample data seeded successfully.")
 
 
-
-
-
-
-
-
-
-
 def role_required(required_role):
     def decorator(f):
         @wraps(f)
@@ -171,7 +167,7 @@ def register_company():
             company_name=data['company_name'],
             hr_contact=data['hr_contact'],
             website=data['website'],
-            approval_status=Approvalstatus.APPROVED
+            approval_status=Approvalstatus.PENDING
         )
         
         company.set_password(data['password'])
@@ -206,8 +202,12 @@ def login():
         session['user_id'] = user.id
         session['user_role'] = user.role.value
 
+         # user.role.value == company then check approved or not if not approved show error message else redirect to dashboard
+        company= Company.query.filter_by(email=email).first()
+        if company and company.check_password(password):
+            if not company.is_approved():
+                return render_template("login.html", error="Company not approved yet")
         return redirect(f"/dashboard/{user.role.value}")
-
     return render_template("login.html")
 
 
@@ -226,18 +226,12 @@ def admin_dashboard():
     total_companies = Company.query.count()
     total_placementdrives = PlacementDrive.query.count()
     total_applications = Application.query.count()   
-    
-    
-    
     pending_companies = Company.query.filter_by(approval_status=Approvalstatus.PENDING).all()
-    
     all_companies = Company.query.all()
     all_students = Student.query.all()
     ongoing_drives = PlacementDrive.query.filter(PlacementDrive.application_deadline >= db.func.current_date()).all()
-
     recent_applications = Application.query.order_by(Application.applied_at.desc()).limit(10).all()
-
-
+    
     return render_template("AdminDashboard.html", pending_companies=pending_companies,
                             all_companies=all_companies, 
                             all_students=all_students, 
@@ -290,45 +284,150 @@ def toggle_blacklist(id):
 @app.route("/admin/search")
 @role_required(Role.ADMIN)  
 def admin_search():
-    query = request.args.get('q', '') 
-    # search students and companies by name or email
-    student = Student.query.filter(
-    (Student.name.ilike(f'%{query}%')) |
-    (Student.email.ilike(f'%{query}%')) |
-    (Student.phone.ilike(f'%{query}%'))).all()
+    query = request.args.get('q', '')
 
-    company = Company.query.filter(
-    (Company.name.ilike(f'%{query}%')) |
-    (Company.email.ilike(f'%{query}%'))).all()
-    return render_template("admin/search_results.html", students=student, companies=company, query=query)
+    if not query:
+        return render_template(
+            "admin/search_results.html",
+            students=[],
+            companies=[],
+            query=query
+        )
 
+    students = Student.query.filter(
+        (Student.name.ilike(f'%{query}%')) |
+        (Student.email.ilike(f'%{query}%')) |
+        (Student.phone.ilike(f'%{query}%'))
+    ).all()
 
+    companies = Company.query.filter(
+        (Company.name.ilike(f'%{query}%')) |
+        (Company.email.ilike(f'%{query}%')) |
+        (Company.phone.ilike(f'%{query}%'))
+    ).all()
 
-
-
+    return render_template(
+        "admin/search_results.html",
+        students=students,
+        companies=companies,
+        query=query
+    )
     
 # Student Dashboard
 @app.route("/dashboard/student")
 @role_required(Role.STUDENT)
 def student_dashboard():
-    return render_template("StudentDashboard.html")
+    student = Student.query.get(session['user_id'])
+
+    drives = PlacementDrive.query.filter(
+        PlacementDrive.approval_status == Approvalstatus.APPROVED,
+        PlacementDrive.status != Drivestatus.COMPLETED
+    ).all()
+
+    applied_applications = Application.query.filter_by(student_id=student.id).all()
+    total_applied = len(applied_applications)
+
+    notification = [app for app in applied_applications if app.status != Applicationstatus.APPLIED]
+
+    return render_template(
+        "StudentDashboard.html",
+        student=student,
+        drives=drives,
+        applications= applied_applications,
+        total_applied=total_applied,
+        notification=notification,
+        ApplicationStatus=Applicationstatus
+
+    )
+    
 
 # Company Dashboard
 @app.route("/dashboard/company")
 @role_required(Role.COMPANY)
 def company_dashboard():
-    return render_template("CompanyDashboard.html")
+    company = Company.query.get(session['user_id'])
+    drives = PlacementDrive.query.filter_by(company_id=company.id).all()
+    total_drives = len(drives)
+    total_applications = Application.query.join(PlacementDrive).filter(
+        PlacementDrive.company_id == company.id
+    ).count()
+    
+    return render_template(
+        "CompanyDashboard.html",
+        company=company,
+        drives=drives,
+        total_drives=total_drives,
+        total_applications=total_applications,
+        Drivestatus=Drivestatus   #imp
+    )
 
-# Admin approval
+@app.route("/company/drive/create", methods=["GET", "POST"])
+@role_required(Role.COMPANY)
+def create_drive():
+    if request.method == "POST":
+        data = request.form
+        company_id = session['user_id']
+        drive = PlacementDrive(
+            company_id=company_id,
+            job_title=data['job_title'],
+            job_description=data['job_description'],
+            eligibility_criteria=data['eligibility_criteria'],
+            application_deadline=datetime.strptime( request.form.get('application_deadline'), "%Y-%m-%dT%H:%M"),
+            salary_range=data['salary_range'],
+            required_skills=data['required_skills'],
+            experience_required=data['experience_required'],
+            status=Drivestatus.UPCOMING,
+            approval_status=Approvalstatus.PENDING
+        )
+        db.session.add(drive)
+        db.session.commit()
+        return redirect(url_for('company_dashboard'))
+    return render_template("CreateDrive.html")
 
-# @app.route("/admin/approve/<int:company_id>")
-# @role_required(Role.ADMIN)
-# def approve_company(company_id):
-#     company = Company.query.get_or_404(company_id)
-#     company.approval_status = Approvalstatus.APPROVED
-#     db.session.commit()
 
-#     return redirect(url_for('AdminDashboard'))
+@app.route("/company/drive/<int:id>/toggle-status")
+@role_required(Role.COMPANY)
+def toggle_drive_status(id):
+    drive = PlacementDrive.query.get_or_404(id)
+    if drive.company_id != session['user_id']:
+        return "Unauthorized", 403
+    if drive.status == Drivestatus.UPCOMING:
+        drive.status = Drivestatus.ONGOING
+    elif drive.status == Drivestatus.ONGOING:
+        drive.status = Drivestatus.COMPLETED
+    db.session.commit()
+    return redirect(url_for('company_dashboard'))
+
+#reviewing student's application
+@app.route("/company/drive/<int:id>/applications")
+@role_required(Role.COMPANY)
+def view_applications(id):
+    drive = PlacementDrive.query.get_or_404(id)
+    if drive.company_id != session['user_id']:
+        return "Unauthorized", 403
+    applications = drive.applications
+    return render_template("ViewApplication.html",drive=drive,applications=applications,ApplicationStatus=Applicationstatus)
+    
+
+
+@app.route("/company/application/<int:id>/update", methods=["POST"])
+@role_required(Role.COMPANY)
+def update_application_status(id):
+    
+    application = Application.query.get_or_404(id)
+    if application.drive.company_id != session['user_id']:
+        abort(403)
+    status = request.form.get("status")
+    if status == "Shortlisted":
+        application.status = Applicationstatus.SHORTLISTED
+    elif status == "Accepted":
+        application.status = Applicationstatus.ACCEPTED
+    elif status == "Rejected":
+        application.status = Applicationstatus.REJECTED
+    else:
+        abort(400)
+    db.session.commit()
+    return redirect(url_for("view_applications", id=application.drive_id))
 
 
 @app.route("/admin/drive/<int:id>/approve")
@@ -339,6 +438,22 @@ def approve_drive(id):
     drive.approval_status = Approvalstatus.APPROVED
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
+@app.route("/student/profiles/<int:id>", methods=["GET","POST"])
+@role_required(Role.STUDENT)
+def student_profile(id):
+
+    student =Student.query.get(id)
+    if request.method == "POST":
+        file = request.files.get("resume")
+        if file and file.filename != "":
+            filename= secure_filename(file.filename)
+            filepath = os.path.join("static/resumes",filename)
+            os.makedirs("static/resumes",exist_ok=True)
+            file.save(filepath)
+            student.resume_path=f"resumes/{filename}"
+            db.session.commit()
+    return render_template("StudentProfile.html",student=student)
 
 
 # Application starts from here

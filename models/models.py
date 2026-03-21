@@ -100,7 +100,10 @@ class PlacementDrive(db.Model):
 
     eligibility_criteria = db.Column(db.String(200), nullable=True)
     application_deadline = db.Column(db.DateTime, nullable=False)
-
+    salary_range = db.Column(db.String(100), nullable=True)
+    required_skills = db.Column(db.String(200), nullable=True)
+    experience_required = db.Column(db.String(100), nullable=True)
+    
     status = db.Column(db.Enum(Drivestatus), default=Drivestatus.UPCOMING.value, nullable=False)
 
     applications = db.relationship('Application', backref='drive', lazy=True,cascade="all, delete-orphan")

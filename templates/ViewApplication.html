@@ -1,0 +1,84 @@
+{% extends "index.html" %}
+{% block title %}Company Dashboard{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <a href="{{ url_for('company_dashboard') }}" class="btn btn-secondary mb-3">
+        ← Back to Dashboard
+    </a>
+
+    <h2>Applications for Drive: {{ drive.job_title }}</h2>
+
+    <table class="table table-bordered table-striped my-3">
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Course</th>
+                <th>Status</th>
+                <th>Resume</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for application in applications %}
+        <tr>
+            <td>{{ application.student.name }}</td>
+            <td>{{ application.student.course }}</td>
+            <td>{{ application.status.value }}</td>
+
+            <td>
+                {% if application.student.resume_path %}
+                    <a href="{{ application.student.resume_path }}" 
+                       target="_blank" 
+                       class="btn btn-sm btn-info">
+                       View Resume
+                    </a>
+                {% else %}
+                    Not Uploaded
+                {% endif %}
+            </td>
+
+            <td>
+                <form action="{{ url_for('update_application_status', id=application.id) }}"
+      method="POST">
+
+    <select name="status" class="form-select form-select-sm">
+
+        <option value="Shortlisted"
+        {% if application.status == Applicationstatus.SHORTLISTED %}
+            selected
+        {% endif %}>
+            Shortlisted
+        </option>
+
+        <option value="Rejected"
+        {% if application.status == Applicationstatus.REJECTED %}
+            selected
+        {% endif %}>
+            Rejected
+        </option>
+
+        <option value="Accepted"
+        {% if application.status == Applicationstatus.ACCEPTED %}
+            selected
+        {% endif %}>
+            Accepted
+        </option>
+
+    </select>
+
+    <button type="submit" class="btn btn-sm btn-primary mt-1">
+        Update
+    </button>
+</form>
+        
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

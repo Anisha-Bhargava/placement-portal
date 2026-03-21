@@ -1,0 +1,76 @@
+
+{% extends "index.html" %}
+{% block title %}Create Placement Drive{% endblock %}
+{% block content %}
+
+
+<form method="POST" action="{{ url_for('create_drive') }}">
+  <div class="mb-3">
+    <label for="company_id" class="form-label">Company</label>
+    <select class="form-select" id="company_id" name="company_id" required>
+      <!-- Populate dynamically with company list -->
+      <option value="">Select Company</option>
+      <option value="1">Google</option>
+      <option value="2">Amazon</option>
+        <option value="3">Meta</option>
+        
+    </select>
+  </div>
+  <!--for will match the id-->
+  <div class="mb-3">
+    <label for="job_title" class="form-label">Job Title</label>
+    <input type="text" class="form-control" id="job_title" name="job_title" maxlength="150" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="job_description" class="form-label">Job Description</label>
+    <textarea class="form-control" id="job_description" name="job_description" rows="4"></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label for="eligibility_criteria" class="form-label">Eligibility Criteria</label>
+    <input type="text" class="form-control" id="eligibility_criteria" name="eligibility_criteria" maxlength="200">
+  </div>
+
+  <div class="mb-3">
+    <label for="application_deadline" class="form-label">Application Deadline</label>
+    <input type="datetime-local" class="form-control" id="application_deadline" name="application_deadline" required>
+  </div>
+ <div class="mb-3">
+    <label for="salary_range" class="form-label">Salary Range</label>
+    <input type="text" class="form-control" id="salary_range" name="salary_range" maxlength="100">
+  </div>
+   <div class="mb-3">
+    <label for="required_skills" class="form-label">Required Skills</label>
+    <input type="text" class="form-control" id="required_skills" name="required_skills" maxlength="200">
+  </div>
+
+ <div class="mb-3">
+    <label for="experience_required" class="form-label">Experience Required</label>
+    <input type="text" class="form-control" id="experience_required" name="experience_required" maxlength="100">
+  </div>
+ 
+
+
+  <div class="mb-3">
+    <label for="status" class="form-label">Drive Status</label>
+    <select class="form-select" id="status" name="status" required>
+      <option value="UPCOMING">Upcoming</option>
+      <option value="ONGOING">Ongoing</option>
+      <option value="COMPLETED">Completed</option>
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="approval_status" class="form-label">Approval Status</label>
+    <select class="form-select" id="approval_status" name="approval_status" required>
+      <option value="PENDING">Pending</option>
+      <option value="APPROVED">Approved</option>
+      <option value="REJECTED">Rejected</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-primary mb-5">Create Placement Drive</button>
+</form>
+
+{% endblock %}
