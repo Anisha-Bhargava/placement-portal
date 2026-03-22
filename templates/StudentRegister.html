@@ -1,89 +1,91 @@
 {% extends "index.html" %}
-
-{% block title %}Student Registration{% endblock %}
-
+{% block title %}{{ form_title }}{% endblock %}
 {% block content %}
 
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-lg-6">
-        <div class="card shadow-lg">
-          <div class="card-header bg-primary text-white text-center">
-            <h3>Student Registration</h3>
-          </div>
-          <div class="card-body">
-            <form method="POST" action="/register" enctype="multipart/form-data">
-              
-              <!-- Name -->
-              <div class="mb-3">
-                <label for="name" class="form-label">Full Name</label>
-                <input type="text" class="form-control" id="name" name="name" required>
-              </div>
-
-              <!-- Email -->
-              <div class="mb-3">
-                <label for="email" class="form-label">Email address</label>
-                <input type="email" class="form-control" id="email" name="email" required>
-              </div>
-
-              <!-- Password -->
-              <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
-              </div>
-
-              <!-- Phone -->
-              <div class="mb-3">
-                <label for="phone" class="form-label">Phone Number</label>
-                <input type="text" class="form-control" id="phone" name="phone">
-              </div>
-
-              <!-- Roll Number -->
-              <div class="mb-3">
-                <label for="roll_number" class="form-label">Roll Number</label>
-                <input type="text" class="form-control" id="roll_number" name="roll_number" required>
-              </div>
-
-              <!-- Course -->
-              <div class="mb-3">
-                <label for="course" class="form-label">Course</label>
-                <input type="text" class="form-control" id="course" name="course" required>
-              </div>
-
-              <!-- Department -->
-              <div class="mb-3">
-                <label for="department" class="form-label">Department</label>
-                <input type="text" class="form-control" id="department" name="department" required>
-              </div>
-
-              <!-- Year of Study -->
-              <div class="mb-3">
-                <label for="year_of_study" class="form-label">Year of Study</label>
-                <input type="number" class="form-control" id="year_of_study" name="year_of_study" min="1" max="5" required>
-              </div>
-
-              <!-- Skills -->
-              <div class="mb-3">
-                <label for="skills" class="form-label">Skills</label>
-                <textarea class="form-control" id="skills" name="skills" rows="3"></textarea>
-              </div>
-
-              <!-- Resume Upload -->
-              <div class="mb-3">
-                <label for="resume" class="form-label">Upload Resume</label>
-                <input type="file" class="form-control" id="resume" name="resume">
-              </div>
-
-              <!-- Submit -->
-              <div class="d-grid">
-                <button type="submit" class="btn btn-success">Register</button>
-              </div>
-
-            </form>
-          </div>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+          <h3>{{ form_title }}</h3>
         </div>
+        <div class="card-body">
+          <form method="POST" action="{{ form_action }}" enctype="multipart/form-data">
+            
+            <!-- Name -->
+            <div class="mb-3">
+              <label for="name" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="name" name="name" 
+                     value="{{ student.name if student else '' }}" required>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email address</label>
+              <input type="email" class="form-control" id="email" name="email" 
+                     value="{{ student.email if student else '' }}" required>
+            </div>
+
+            <!-- Password (only for registration) -->
+            {% if not student %}
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            {% endif %}
+
+            <!-- Phone -->
+            <div class="mb-3">
+              <label for="phone" class="form-label">Phone Number</label>
+              <input type="text" class="form-control" id="phone" name="phone" 
+                     value="{{ student.phone if student else '' }}">
+            </div>
+
+            <!-- Roll Number -->
+            <div class="mb-3">
+              <label for="roll_number" class="form-label">Roll Number</label>
+              <input type="text" class="form-control" id="roll_number" name="roll_number" 
+                     value="{{ student.roll_number if student else '' }}" required>
+            </div>
+
+            <!-- Course -->
+            <div class="mb-3">
+              <label for="course" class="form-label">Course</label>
+              <input type="text" class="form-control" id="course" name="course" 
+                     value="{{ student.course if student else '' }}" required>
+            </div>
+
+            <!-- Skills -->
+            <div class="mb-3">
+              <label for="skills" class="form-label">Skills</label>
+              <textarea class="form-control" id="skills" name="skills" rows="3">{{ student.skills if student else '' }}</textarea>
+            </div>
+
+            <!-- Resume Upload -->
+            <div class="mb-3">
+              <label for="resume" class="form-label">Upload Resume</label>
+              <input class="form-control" type="file" id="resume" name="resume">
+              {% if student and student.resume_path %}
+                <p class="mt-2">Current: <a href="{{ url_for('static', filename=student.resume_path) }}" target="_blank">View Resume</a></p>
+              {% endif %}
+            </div>
+
+            <!-- Submit -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success btn-lg">
+                {{ 'Register' if not student else 'Update Profile' }}
+              </button>
+            </div>
+          </form>
+        </div>
+        {% if not student %}
+        <div class="card-footer text-muted text-center">
+          Already registered? <a href="/login" class="text-primary">Login here</a>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
+</div>
 
 {% endblock %}

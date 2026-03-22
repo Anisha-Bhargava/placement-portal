@@ -1,19 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results</title>
-</head>
-<body>
-    <h1>Search Results for "{{ query }}"</h1>
-    <h2>Students:</h2>
-    {% for student in students %}
-        <p>{{ student.name }} - {{ student.email }}</p>
-    {% endfor %}
-    <h2>Companies:</h2>
-    {% for company in companies %}
-        <p>{{ company.name }} - {{ company.email }}</p>
-    {% endfor %}
-</body>
-</html>
+{% extends "index.html" %}
+{% block title %}admin search results{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h3>Admin's Search Results for"{{ query }}"</h3>
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-info text-dark">
+            Students
+        </div>
+        <div class="card-body">
+            {% if students %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Course</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.email }}</td>
+                        <td>{{ student.phone }}</td>
+                        <td>{{ student.course }}</td>
+                        <td><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#studentModal{{ student.id }}">
+            View Profile
+          </button>
+        </td>
+        
+      <!-- Student Details Modal -->
+      <div class="modal fade" id="studentModal{{  student.id  }}" tabindex="-1" aria-labelledby="studentModalLabel{{ student.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="studentModalLabel{{ student.id }}">Student Overview</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Name:</strong> {{ student.name }}</p>
+              <p><strong>Email:</strong> {{ student.email }}</p>
+              <p><strong>Phone:</strong> {{ student.phone }}</p>
+              <p><strong>Course:</strong> {{ student.course }}</p>
+                <p><strong>Resume:</strong> <a href="{{ url_for('static', filename=student.resume_path) }}" target="_blank">View Resume</a></p>
+
+              <p>Applied to {{ student.applications|length }} drives</p>
+              <p><strong>Status:</strong> {{ "Blacklisted" if student.blacklist else "Active" }}</p>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No students found matching your search query.</p>
+            {% endif %}
+        </div>
+    </div>
+
+  <div class="card shadow-sm">
+        <div class="card-header bg-info text-dark">
+            Companies
+        </div>
+        <div class="card-body">
+            {% if companies %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Company Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <td>{{ company.company_name }}</td>
+                        <td>{{ company.email }}</td>
+                        <td>{{ company.phone }}</td>
+                        <td>
+                            {% if company.approval_status.value == "pending" %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif company.approval_status.value == "approved" %}
+                            <span class="badge bg-success">Approved</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No companies found matching your search query.</p>
+            {% endif %}
+        </div>
+  </div>
+</div>
+
+{% endblock %}

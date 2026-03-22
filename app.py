@@ -10,6 +10,7 @@ from flask import abort
 import os
 
 app = Flask(__name__)
+os.makedirs(app.instance_path, exist_ok=True)
 app.config.from_object(Config)
 
 db.init_app(app) #sql and flask ko integrate karke start kara h
@@ -118,39 +119,62 @@ def role_required(required_role):
 def home():
     return render_template("home.html")
 
-
-
 #Student Registeration
-
 @app.route("/register/student", methods=["GET", "POST"])
 def register_student():
     if request.method == "POST":
-        data=request.form
-
-        if Student.query.filter_by(email=data['email']).first():
-            return "Email already registered. Please use a different email.", 400
-        
-        #Create student
+        data = request.form
         student = Student(
-            name=data['name'],
-            email=data['email'],
-            roll_number=data['roll_number'],
-            course=data['course'],
-            skills=data['skills']
+            name=data["name"],
+            email=data["email"],
+            roll_number=data["roll_number"],
+            course=data["course"],
+            phone=data.get("phone"),
+            skills=data.get("skills")
         )
-        
-        student.set_password(data['password'])
-        
+        student.set_password(data["password"])
+        file = request.files.get("resume")
+        if file and file.filename != "":
+            filename = secure_filename(file.filename)
+            filepath = os.path.join("static/resumes", filename)
+            os.makedirs("static/resumes", exist_ok=True)
+            file.save(filepath)
+            student.resume_path = f"resumes/{filename}"
+
         db.session.add(student)
         db.session.commit()
+        return redirect(url_for("login"))
 
-        return redirect(url_for('login'))
-    return render_template("StudentRegister.html")
+    return render_template("student_register.html", form_title="Student Registration", form_action="/register/student", student=None)
 
-        
+#Profile Editing
+@app.route("/student/profiles/<int:id>", methods=["GET", "POST"])
+@role_required(Role.STUDENT)
+def student_profile(id):
+    student = Student.query.get_or_404(id)
+
+    if request.method == "POST":   
+        data = request.form
+        student.name = data["name"]
+        student.email = data["email"]
+        student.phone = data.get("phone")
+        student.roll_number = data["roll_number"]
+        student.course = data["course"]
+        student.skills = data.get("skills")
+
+        file = request.files.get("resume")
+        if file and file.filename != "":
+            filename = secure_filename(file.filename)
+            filepath = os.path.join("static/resumes", filename)
+            os.makedirs("static/resumes", exist_ok=True)
+            file.save(filepath)
+            student.resume_path = f"resumes/{filename}"
+        db.session.commit()
+        return redirect("/dashboard/student")
+    return render_template("StudentRegister.html", form_title="Edit Profile", form_action=f"/student/profiles/{id}", student=student)
+
 
 #Company Registeration
-
 
 @app.route("/register/company", methods=["GET", "POST"])
 def register_company():
@@ -281,37 +305,59 @@ def toggle_blacklist(id):
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
-@app.route("/admin/search")
-@role_required(Role.ADMIN)  
-def admin_search():
+@app.route("/search") 
+def search():
     query = request.args.get('q', '')
+    #Admin role search
+    if session.get('user_role') == "admin":
+        if not query:
+            return render_template(
+                "admin/search_results.html",
+                students=[],
+                companies=[],
+                query=query
+            )
 
-    if not query:
+        students = Student.query.filter(
+            (Student.name.ilike(f'%{query}%')) |
+            (Student.email.ilike(f'%{query}%')) |
+            (Student.phone.ilike(f'%{query}%'))
+        ).all()
+
+        companies = Company.query.filter(
+                (Company.company_name.ilike(f'%{query}%')) |
+                (Company.email.ilike(f'%{query}%')) |
+                (Company.phone.ilike(f'%{query}%')) |
+                (Company.website.ilike(f'%{query}%')) |
+                (Company.hr_contact.ilike(f'%{query}%'))
+            ).all()
+
         return render_template(
             "admin/search_results.html",
-            students=[],
-            companies=[],
+            students=students,
+            companies=companies,
             query=query
         )
-
-    students = Student.query.filter(
-        (Student.name.ilike(f'%{query}%')) |
-        (Student.email.ilike(f'%{query}%')) |
-        (Student.phone.ilike(f'%{query}%'))
-    ).all()
-
-    companies = Company.query.filter(
-        (Company.name.ilike(f'%{query}%')) |
-        (Company.email.ilike(f'%{query}%')) |
-        (Company.phone.ilike(f'%{query}%'))
-    ).all()
-
-    return render_template(
-        "admin/search_results.html",
-        students=students,
-        companies=companies,
-        query=query
-    )
+    
+    # Student role search
+    elif session['user_role'] == "student":
+        if not query:
+            # If query is empty, return all approved drives
+            drives = PlacementDrive.query.filter(
+                PlacementDrive.approval_status == Approvalstatus.APPROVED,
+                PlacementDrive.status != Drivestatus.COMPLETED
+            ).all()
+        else:
+            # Search by job title, company name, or description
+            drives = PlacementDrive.query.filter(
+                PlacementDrive.approval_status == Approvalstatus.APPROVED,
+                PlacementDrive.status != Drivestatus.COMPLETED,
+                (PlacementDrive.job_title.ilike(f"%{query}%")) |
+                (PlacementDrive.company_id.ilike(f"%{query}%")) |
+                (PlacementDrive.job_description.ilike(f"%{query}%"))
+            ).all()
+        return render_template("student/searchJobs.html",drives=drives,query=query)
+    
     
 # Student Dashboard
 @app.route("/dashboard/student")
@@ -323,7 +369,8 @@ def student_dashboard():
         PlacementDrive.approval_status == Approvalstatus.APPROVED,
         PlacementDrive.status != Drivestatus.COMPLETED
     ).all()
-
+    
+    company = Company.query.all()
     applied_applications = Application.query.filter_by(student_id=student.id).all()
     total_applied = len(applied_applications)
 
@@ -332,12 +379,12 @@ def student_dashboard():
     return render_template(
         "StudentDashboard.html",
         student=student,
+        company=company,
         drives=drives,
         applications= applied_applications,
         total_applied=total_applied,
-        notification=notification,
+        notifications=notification,
         ApplicationStatus=Applicationstatus
-
     )
     
 
@@ -367,6 +414,9 @@ def create_drive():
     if request.method == "POST":
         data = request.form
         company_id = session['user_id']
+        company = Company.query.get_or_404(company_id)
+        if company.approval_status != Approvalstatus.APPROVED:
+            return "Your company is not approved yet. Cannot create drive.", 403
         drive = PlacementDrive(
             company_id=company_id,
             job_title=data['job_title'],
@@ -439,21 +489,23 @@ def approve_drive(id):
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
-@app.route("/student/profiles/<int:id>", methods=["GET","POST"])
-@role_required(Role.STUDENT)
-def student_profile(id):
+@app.route("/student/apply/<int:drive_id>")
+def apply_drive(drive_id):
+    student_id = session['user_id']
+    # drive_id = request.view_args['drive_id']
+    drive=PlacementDrive.query.get_or_404(drive_id)
 
-    student =Student.query.get(id)
-    if request.method == "POST":
-        file = request.files.get("resume")
-        if file and file.filename != "":
-            filename= secure_filename(file.filename)
-            filepath = os.path.join("static/resumes",filename)
-            os.makedirs("static/resumes",exist_ok=True)
-            file.save(filepath)
-            student.resume_path=f"resumes/{filename}"
-            db.session.commit()
-    return render_template("StudentProfile.html",student=student)
+    if drive.approval_status != Approvalstatus.APPROVED or drive.status == Drivestatus.COMPLETED:
+        return "This drive is not open for applications.", 400
+
+    existing_application = Application.query.filter_by(student_id=student_id, drive_id=drive_id).first()
+    if existing_application:
+        return "You have already applied for this drive.", 400
+
+    application = Application(student_id=student_id, drive_id=drive_id)
+    db.session.add(application)
+    db.session.commit()
+    return redirect(url_for('student_dashboard')) 
 
 
 # Application starts from here
@@ -462,4 +514,5 @@ if __name__ == "__main__":
     with app.app_context():
         create_db()
         seed_data()
+
     app.run(debug=True)

@@ -1,5 +1,3 @@
-
-
 from db import db
 from datetime import datetime
 from enum import Enum
@@ -28,6 +26,8 @@ class Applicationstatus(Enum):
     SHORTLISTED = 'shortlisted'
     REJECTED = 'rejected'
     ACCEPTED = 'accepted'
+    INTERVIEW = 'interview'
+    PLACED = 'placed'
 
 class Usercommon(db.Model):
     __abstract__ = True
