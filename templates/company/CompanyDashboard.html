@@ -1,0 +1,44 @@
+{% extends "index.html" %}
+{% block title %}Company Dashboard{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Welcome, {{ company.company_name }}</h2>
+
+    <!-- Dashboard Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center">
+                <i class="bi bi-briefcase-fill fs-2 text-primary"></i>
+                <h5>Total Drives</h5>
+                <h3>{{ total_drives }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center">
+                <i class="bi bi-people-fill fs-2 text-success"></i>
+                <h5>Total Applications</h5>
+                <h3>{{ total_applications }}</h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3 text-center">
+                <a href="{{ url_for('create_drive') }}" class="btn btn-info w-100">
+                    + Create New Drive
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-3">
+        <input type="text" class="form-control" placeholder="Search drives..." id="searchInput">
+    </div>
+
+    {% include "company/CompanyDrives.html" %}  
+</div>
+
+{% endblock %}
+templates

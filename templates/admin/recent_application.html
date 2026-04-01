@@ -1,0 +1,36 @@
+<div class="card shadow-sm mb-5">
+            <div class="card-header bg-dark text-white">
+                Recent Applications
+            </div>
+            <div class="card-body table-responsive">
+
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Drive</th>
+                            <th>Status</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in recent_applications %}
+
+                        <tr>
+                            <td class="fw-bold">{{ data.student.name }}</td>
+                            <td>{{ data.drive.job_title }}</td>
+
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ data.status.value }}
+                                </span>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+
+            </div>
+        </div>

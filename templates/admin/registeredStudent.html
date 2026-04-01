@@ -1,0 +1,40 @@
+<div class="card shadow-sm mb-5">
+            <div class="card-header bg-dark text-white">
+                Registered Students
+            </div>
+            <div class="card-body table-responsive">
+
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Roll No</th>
+                            <th>Action</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in all_students %}
+                        <tr>
+                            <td class="fw-bold">{{ data.name }}</td>
+                            <td>{{ data.roll_number }}</td>
+
+                            <td class="text-center">
+                                <form action="{{ url_for('toggle_blacklist', id=data.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm 
+                                {% if data.blacklist %}btn-info{% else %}btn-danger{% endif %}
+                                    ">
+                                        {% if data.blacklist %}
+                                        Remove from Blacklist
+                                        {% else %}
+                                        Blacklist
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>

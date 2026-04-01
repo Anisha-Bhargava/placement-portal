@@ -1,0 +1,100 @@
+/* CareerBridge Dashboard Custom Styles */
+
+/* General font and background */
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+/* Navbar */
+.navbar {
+  background-color: #004080 !important; /* CareerBridge blue */
+}
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+.nav-link {
+  color: #fff !important;
+}
+.nav-link:hover {
+  color: #ffd700 !important; /* gold hover */
+}
+
+/* Summary Cards */
+.card {
+  border-radius: 10px;
+}
+.card h5 {
+  font-weight: 600;
+  color: #555;
+}
+.card h3 {
+  font-size: 2rem;
+  color: #004080;
+}
+.card i {
+  margin-bottom: 8px;
+}
+
+/* Buttons */
+.btn-info {
+  background-color: #004080;
+  border: none;
+}
+.btn-info:hover {
+  background-color: #003366;
+}
+
+/* Table */
+.table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+.table thead {
+  background-color: #004080;
+  color: #fff;
+}
+.table-hover tbody tr:hover {
+  background-color: #e6f0ff;
+}
+
+/* Badges */
+.badge {
+  font-size: 0.85rem;
+  padding: 6px 10px;
+}
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+.badge.bg-secondary {
+  background-color: #6c757d !important;
+}
+.badge.bg-dark {
+  background-color: #343a40 !important;
+}
+
+/* Modal */
+.modal-content {
+  border-radius: 12px;
+}
+.modal-header {
+  background-color: #004080;
+  color: #fff;
+}
+.modal-title {
+  font-weight: 600;
+}
+
+body {
+  background: url('"C:\Users\KIIT\Downloads\skyline image.jpg"') no-repeat center center fixed;
+  background-size: cover;
+}

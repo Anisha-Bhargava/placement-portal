@@ -171,7 +171,7 @@ def student_profile(id):
             student.resume_path = f"resumes/{filename}"
         db.session.commit()
         return redirect("/dashboard/student")
-    return render_template("StudentRegister.html", form_title="Edit Profile", form_action=f"/student/profiles/{id}", student=student)
+    return render_template("student/StudentRegister.html", form_title="Edit Profile", form_action=f"/student/profiles/{id}", student=student)
 
 
 #Company Registeration
@@ -200,7 +200,7 @@ def register_company():
         db.session.commit()
 
         return redirect(url_for('login'))
-    return render_template("CompanyRegister.html",error="error", success="success")
+    return render_template("company/CompanyRegister.html",error="error", success="success")
 
 
 # login
@@ -256,7 +256,7 @@ def admin_dashboard():
     ongoing_drives = PlacementDrive.query.filter(PlacementDrive.application_deadline >= db.func.current_date()).all()
     recent_applications = Application.query.order_by(Application.applied_at.desc()).limit(10).all()
     
-    return render_template("AdminDashboard.html", pending_companies=pending_companies,
+    return render_template("admin/AdminDashboard.html", pending_companies=pending_companies,
                             all_companies=all_companies, 
                             all_students=all_students, 
                             ongoing_drives=ongoing_drives, 
@@ -377,7 +377,7 @@ def student_dashboard():
     notification = [app for app in applied_applications if app.status != Applicationstatus.APPLIED]
 
     return render_template(
-        "StudentDashboard.html",
+        "student/StudentDashboard.html",
         student=student,
         company=company,
         drives=drives,
@@ -400,7 +400,7 @@ def company_dashboard():
     ).count()
     
     return render_template(
-        "CompanyDashboard.html",
+        "company/CompanyDashboard.html",
         company=company,
         drives=drives,
         total_drives=total_drives,
