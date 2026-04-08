@@ -22,61 +22,52 @@
         </thead>
 
         <tbody>
-        {% for application in applications %}
-        <tr>
-            <td>{{ application.student.name }}</td>
-            <td>{{ application.student.course }}</td>
-            <td>{{ application.status.value }}</td>
+            {% for application in applications %}
+            <tr>
+                <td>{{ application.student.name }}</td>
+                <td>{{ application.student.course }}</td>
+                <td>{{ application.status.value }}</td>
 
-            <td>
-                {% if application.student.resume_path %}
-                    <a href="{{ application.student.resume_path }}" 
-                       target="_blank" 
-                       class="btn btn-sm btn-info">
-                       View Resume
+                <td>
+                    {% if application.student.resume_path %}
+                    <a href="{{ application.student.resume_path }}" target="_blank" class="btn btn-sm btn-info">
+                        View Resume
                     </a>
-                {% else %}
+                    {% else %}
                     Not Uploaded
-                {% endif %}
-            </td>
+                    {% endif %}
+                </td>
 
-            <td>
-                <form action="{{ url_for('update_application_status', id=application.id) }}"
-      method="POST">
+                <td>
+                    <form action="{{ url_for('update_application_status', id=application.id) }}" method="POST">
 
-    <select name="status" class="form-select form-select-sm">
+                        <select name="status" class="form-select form-select-sm">
 
-        <option value="Shortlisted"
-        {% if application.status == Applicationstatus.SHORTLISTED %}
-            selected
-        {% endif %}>
-            Shortlisted
-        </option>
+                            <option value="Shortlisted" {% if application.status==Applicationstatus.SHORTLISTED %}
+                                selected {% endif %}>
+                                Shortlisted
+                            </option>
 
-        <option value="Rejected"
-        {% if application.status == Applicationstatus.REJECTED %}
-            selected
-        {% endif %}>
-            Rejected
-        </option>
+                            <option value="Rejected" {% if application.status==Applicationstatus.REJECTED %} selected {%
+                                endif %}>
+                                Rejected
+                            </option>
 
-        <option value="Accepted"
-        {% if application.status == Applicationstatus.ACCEPTED %}
-            selected
-        {% endif %}>
-            Accepted
-        </option>
+                            <option value="Accepted" {% if application.status==Applicationstatus.ACCEPTED %} selected {%
+                                endif %}>
+                                Accepted
+                            </option>
 
-    </select>
+                        </select>
 
-    <button type="submit" class="btn btn-sm btn-primary mt-1">
-        Update
-    </button>
-</form>
-        
-            </td>
-        </tr>
-        {% endfor %}
+                        <button type="submit" class="btn btn-sm btn-primary mt-1">
+                            Update
+                        </button>
+                    </form>
+
+                </td>
+            </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>

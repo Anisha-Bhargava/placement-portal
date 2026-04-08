@@ -113,22 +113,22 @@ def generate_admin_summary_chart(total_students, total_companies, total_drives, 
     labels = ['Students', 'Companies', 'Drives', 'Applications']
     values = [total_students, total_companies, total_drives, total_applications]
 
-    fig, ax = plt.subplots(figsize=(5, 4))  # 🔥 smaller size
+    fig, ax = plt.subplots(figsize=(5, 4)) 
 
     ax.pie(
         values,
         labels=labels,
-        autopct='%1.0f%%',   # cleaner percentages
+        autopct='%1.0f%%',   
         startangle=90,
-        textprops={'fontsize': 10}  # 🔥 smaller text
+        textprops={'fontsize': 10}  
     )
 
-    ax.set_title("Summary", fontsize=12)  # 🔥 smaller title
+    ax.set_title("Summary", fontsize=12)  
 
     plt.tight_layout()
 
     img = io.BytesIO()
-    plt.savefig(img, format='png', dpi=100)  # 🔥 better clarity
+    plt.savefig(img, format='png', dpi=100)  
     img.seek(0)
     plt.close(fig)
 
