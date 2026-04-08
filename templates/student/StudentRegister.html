@@ -55,6 +55,16 @@
                      value="{{ student.course if student else '' }}" required>
             </div>
 
+            <div class="mb-3">
+              <label for="department" class="form-label">Department</label>
+              <input type="text" class="form-control" id="department" name="department" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="year_of_study" class="form-label">Year of Study</label>
+              <input type="number" class="form-control" id="year_of_study" name="year_of_study" min="1" max="4" required>
+            </div>
+
             <!-- Skills -->
             <div class="mb-3">
               <label for="skills" class="form-label">Skills</label>

@@ -1,0 +1,118 @@
+{% extends "index.html" %}
+{% block title %}Company Search Results{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="text-white mb-3">Search Results for "{{ query }}"</h3>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white">
+            Your Drives
+        </div>
+
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Status</th>
+                        <th>Approval</th>
+                        <th>Applications</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% if drives %}
+                        {% for drive in drives %}
+                        <tr>
+                            <td>
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#driveModal{{ drive.id }}">
+                                    {{ drive.job_title }}
+                                </a>
+                            </td>
+
+                            <td>
+                                {% if drive.status == Drivestatus.UPCOMING %}
+                                    <span class="badge bg-warning text-dark">Upcoming</span>
+                                {% elif drive.status == Drivestatus.ONGOING %}
+                                    <span class="badge bg-success">Active</span>
+                                {% elif drive.status == Drivestatus.COMPLETED %}
+                                    <span class="badge bg-secondary">Closed</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if drive.approval_status.name == "APPROVED" %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif drive.approval_status.name == "PENDING" %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                {% elif drive.approval_status.name == "REJECTED" %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% elif drive.approval_status.name == "BLACKLISTED" %}
+                                    <span class="badge bg-dark">Blacklisted</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ drive.applications|length }}</td>
+
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        Actions
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('view_applications', id=drive.id) }}">
+                                                View Applications
+                                            </a>
+                                        </li>
+                                        {% if drive.status == Drivestatus.UPCOMING %}
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('toggle_drive_status', id=drive.id) }}">
+                                                    Start Drive
+                                                </a>
+                                            </li>
+                                        {% elif drive.status == Drivestatus.ONGOING %}
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('toggle_drive_status', id=drive.id) }}">
+                                                    Close Drive
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="driveModal{{ drive.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">{{ drive.job_title }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p><strong>Status:</strong> {{ drive.status.name }}</p>
+                                        <p><strong>Approval:</strong> {{ drive.approval_status.name }}</p>
+                                        <p><strong>Applications:</strong> {{ drive.applications|length }}</p>
+                                        <p><strong>Description:</strong> {{ drive.job_description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No matching drives found.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

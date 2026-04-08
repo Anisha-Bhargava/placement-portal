@@ -13,28 +13,22 @@
         <p class="text-muted">Here you can manage companies, students, and placement applications.</p>
     </div>
 
-
     <div class="row g-4 mb-5">
         <div class="col-md-3">
             <div class="card shadow-sm border-0 text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Students</h5>
-
-                    <h4 class="card-text  fw-bold display-4">{{ total_students }}</h4>
-
+                    <h4 class="card-text fw-bold display-4">{{ total_students }}</h4>
                 </div>
-
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card shadow-sm border-0 text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Companies</h5>
-
                     <h4 class="card-text fw-bold display-4">{{ total_companies }}</h4>
-
                 </div>
-
             </div>
         </div>
 
@@ -42,11 +36,8 @@
             <div class="card shadow-sm border-0 text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Drives</h5>
-
                     <h4 class="card-text fw-bold display-4">{{ total_drives }}</h4>
-
                 </div>
-
             </div>
         </div>
 
@@ -54,14 +45,11 @@
             <div class="card shadow-sm border-0 text-center">
                 <div class="card-body">
                     <h5 class="card-title">Total Applications</h5>
-
                     <h4 class="card-text fw-bold display-4">{{ total_applications }}</h4>
-
                 </div>
-
             </div>
         </div>
-
+    </div>
 
     {% include "admin/registeredCompanies.html" %}
 
@@ -70,7 +58,16 @@
     {% include "admin/ongoingPlacementdrive.html" %}
 
     {% include "admin/recent_application.html" %}
+
+    <!-- Graph Section -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-dark text-white">
+            Dashboard Summary Graph
+        </div>
+        <div class="card-body text-center">
+            <img src="data:image/png;base64,{{ graph_url }}" alt="Admin Summary Graph" class="img-fluid rounded">
+        </div>
     </div>
-    {% endblock %}
-    
-    
+
+</div>
+{% endblock %}

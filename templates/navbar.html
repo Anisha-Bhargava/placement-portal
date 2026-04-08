@@ -1,40 +1,59 @@
 <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-      <!-- Brand -->
-      <a class="navbar-brand" href="#">Placement Portal</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
 
-      <!-- Toggle button for mobile -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+    <a class="navbar-brand fw-bold" href="#">Placement Portal</a>
 
-      <!-- Navbar links -->
-      <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <!-- Company -->
-          <li class="nav-item">
-            <a class="nav-link" href="/companies">Company</a>
-          </li>
-          <!-- Students -->
-          <li class="nav-item">
-            <a class="nav-link" href="/students">Students</a>
-          </li>
-          <!-- Admin -->
-          <li class="nav-item">
-            <a class="nav-link" href="/admin">Admin Profile</a>
-          </li>
-          <!-- Placement Applications -->
-          <li class="nav-item">
-            <a class="nav-link" href="/applications">Placement Applications</a>
-          </li>
-        </ul>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+      aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-        <!-- Search box -->
-        <form class="d-flex" role="search" action="{{ url_for('search')}}" method="GET">
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        {% if session.get('user_role') == 'admin' %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+        </li>
+        {% endif %}
+
+        {% if session.get('user_role') == 'student' %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('student_dashboard') }}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('student_profile', id=session.get('user_id')) }}">Profile</a>
+        </li>
+        {% endif %}
+
+        {% if session.get('user_role') == 'company' %}
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('company_dashboard') }}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('create_drive') }}">Create Drive</a>
+        </li>
+        {% endif %}
+
+      </ul>
+
+      <div class="d-flex align-items-center gap-2">
+        {% if session.get('user_role') in ['admin', 'student', 'company'] %}
+        <form class="d-flex" role="search" action="{{ url_for('search') }}" method="GET">
           <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search">
           <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
+        {% endif %}
+
+        <span class="text-white me-2">
+          {{ session.get('user_role') | capitalize }}
+        </span>
+
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
       </div>
+
     </div>
-  </nav>
+  </div>
+</nav>

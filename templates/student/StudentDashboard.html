@@ -6,21 +6,17 @@
 
   <!-- Welcome & Actions -->
   <div class="row align-items-center mb-4">
+
     <div class="col-md-6">
-      <h1>Welcome - {{ student.name }}</h1>
+      <h1 class="fw-bold text-white">Welcome - {{ student.name }}</h1>
     </div>
-    <div class="col-md-2 text-center">
-      <a href="{{ url_for('student_profile', id=student.id) }}" class="btn btn-warning btn-sm">
+
+    <div class="col-md-6 text-end">
+      <a href="{{ url_for('student_profile', id=student.id) }}" class="btn btn-warning btn-sm me-2">
         Edit Profile
       </a>
-    </div>
-    <div class="col-md-2 text-center">
-      <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">
-        Logout
-      </a>
-    </div>
-    <div class="col-md-2 text-center">
-      <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#studentModal{{ student.id }}">
+
+      <button class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" data-bs-target="#studentModal{{ student.id }}">
         View Profile
       </button>
     </div>
@@ -36,24 +32,27 @@
           <p><strong>Course:</strong> {{ student.course }}</p>
           <p><strong>Skills:</strong> {{ student.skills }}</p>
           {% if student.resume_path %}
-            <a href="{{ url_for('static', filename=student.resume_path) }}" target="_blank" class="btn btn-success btn-sm">
-              Download Resume
-            </a>
+          <a href="{{ url_for('static', filename=student.resume_path) }}" target="_blank"
+            class="btn btn-success btn-sm">
+            Download Resume
+          </a>
           {% endif %}
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card p-3 text-center shadow-sm">
-        <h5>Total Applications</h5>
-        <h2>{{ total_applied }}</h2>
-      </div>
-    </div>
+
+    <div class="col-md-4 d-flex">
+  <div class="card shadow-sm w-100 d-flex flex-column justify-content-center text-center border-0 total-app-card">
+    <h5 class="mb-2">Total Applications</h5>
+    <h2 class="fw-bold display-5 mb-0">{{ total_applied }}</h2>
+  </div>
+</div>
   </div>
 
   <!-- Student Details Modal -->
   {% if student %}
-  <div class="modal fade" id="studentModal{{ student.id }}" tabindex="-1" aria-labelledby="studentModalLabel{{ student.id }}" aria-hidden="true">
+  <div class="modal fade" id="studentModal{{ student.id }}" tabindex="-1"
+    aria-labelledby="studentModalLabel{{ student.id }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -66,9 +65,10 @@
           <p><strong>Phone:</strong> {{ student.phone }}</p>
           <p><strong>Course:</strong> {{ student.course }}</p>
           {% if student.resume_path %}
-            <p><strong>Resume:</strong>
-              <a href="{{ url_for('static', filename=student.resume_path) }}" target="_blank" class="btn btn-success btn-sm">Download Resume</a>
-            </p>
+          <p><strong>Resume:</strong>
+            <a href="{{ url_for('static', filename=student.resume_path) }}" target="_blank"
+              class="btn btn-success btn-sm">Download Resume</a>
+          </p>
           {% endif %}
           <p>Applied to {{ student.applications|length }} drives</p>
           <p><strong>Status:</strong> {{ "Blacklisted" if student.blacklist else "Active" }}</p>
@@ -85,7 +85,8 @@
   <div class="card mt-4 shadow-sm">
     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Notifications</h5>
-      <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#notificationsCollapse">
+      <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse"
+        data-bs-target="#notificationsCollapse">
         Toggle
       </button>
     </div>
@@ -103,12 +104,13 @@
   </div>
 
   <!-- Companies Section -->
-  <div class="container mt-4">
-    <h4>Companies</h4>
+  <div class="container mt-4 companies-section">
+    <h4 class="text-white fw-bold">Companies</h4>
+
     {% for comp in company %}
     <div class="row align-items-center mb-3">
       <div class="col-md-4">
-        <strong>{{ comp.company_name }}</strong>
+        <strong class="text-white">{{ comp.company_name }}</strong>
       </div>
       <div class="col-md-6 text-end">
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#companyModal{{ comp.id }}">
@@ -119,136 +121,111 @@
         </button>
       </div>
     </div>
+
     <!-- Company Details Modal -->
-  <div class="modal fade" id="companyModal{{ comp.id }}" tabindex="-1" aria-labelledby="companyModalLabel{{ comp.id }}"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="companyModalLabel{{ comp.id }}">Company Overview</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p><strong>Name:</strong> {{ comp.company_name }}</p>
-          <p><strong>HR Contact:</strong> {{ comp.hr_contact }}</p>
-          <p><strong>Website:</strong> <a href="{{ comp.website }}" target="_blank">{{ comp.website }}</a></p>
-          <p><strong>Status:</strong> {{ comp.approval_status.value }}</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <div class="modal fade" id="companyModal{{ comp.id }}" tabindex="-1"
+      aria-labelledby="companyModalLabel{{ comp.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="companyModalLabel{{ comp.id }}">Company Overview</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Name:</strong> {{ comp.company_name }}</p>
+            <p><strong>HR Contact:</strong> {{ comp.hr_contact }}</p>
+            <p><strong>Website:</strong> <a href="{{ comp.website }}" target="_blank">{{ comp.website }}</a></p>
+            <p><strong>Status:</strong> {{ comp.approval_status.value }}</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Company Drives Modal -->
-  <div class="modal fade" id="companyDrives{{ comp.id }}" tabindex="-1"
-    aria-labelledby="companyDrivesLabel{{ comp.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="companyDrivesLabel{{ comp.id }}">Placement Drives — {{ comp.company_name }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          {% if comp.drives %}
-          {% for drive in comp.drives %}
-          <div class="card mb-3">
-            <div class="card-body">
-              <h5 class="card-title">{{ drive.job_title }}</h5>
-              <p><strong>Description:</strong> {{ drive.job_description }}</p>
-              <p><strong>Eligibility:</strong> {{ drive.eligibility_criteria }}</p>
-              <p><strong>Deadline:</strong> {{ drive.application_deadline }}</p>
-              <p><strong>Salary Range:</strong> {{ drive.salary_range }}</p>
-              <p><strong>Required Skills:</strong> {{ drive.required_skills }}</p>
-              <p><strong>Experience Required:</strong> {{ drive.experience_required }}</p>
-              <p><strong>Status:</strong> {{ drive.status.value }}</p>
-              <a href="{{ url_for('apply_drive', drive_id=drive.id) }}" class="btn btn-danger mt-2">Apply</a>
-            </div>
+    <!-- Company Drives Modal -->
+    <div class="modal fade" id="companyDrives{{ comp.id }}" tabindex="-1"
+      aria-labelledby="companyDrivesLabel{{ comp.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="companyDrivesLabel{{ comp.id }}">Placement Drives — {{ comp.company_name }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          {% endfor %}
-          {% else %}
-          <p>No drives available for this company.</p>
-          {% endif %}
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <div class="modal-body">
+            {% if comp.drives %}
+            {% for drive in comp.drives %}
+            <div class="card mb-3">
+              <div class="card-body">
+                <h5 class="card-title">{{ drive.job_title }}</h5>
+                <p><strong>Description:</strong> {{ drive.job_description }}</p>
+                <p><strong>Eligibility:</strong> {{ drive.eligibility_criteria }}</p>
+                <p><strong>Deadline:</strong> {{ drive.application_deadline }}</p>
+                <p><strong>Salary Range:</strong> {{ drive.salary_range }}</p>
+                <p><strong>Required Skills:</strong> {{ drive.required_skills }}</p>
+                <p><strong>Experience Required:</strong> {{ drive.experience_required }}</p>
+                <p><strong>Status:</strong> {{ drive.status.value }}</p>
+                <a href="{{ url_for('apply_drive', drive_id=drive.id) }}" class="btn btn-danger mt-2">Apply</a>
+              </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p>No drives available for this company.</p>
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Available Drives -->
+  <h4 class="mt-4 text-white fw-bold">Available Drives</h4>
+  {% if drives %}
+  {% for drive in drives %}
+  <div class="card glass-card mb-3 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">{{ drive.job_title }}</h5>
+      <p>{{ drive.description }}</p>
+      <p><strong>Salary Range:</strong> {{ drive.salary_range }}</p>
+      <p><strong>Required Skills:</strong> {{ drive.required_skills }}</p>
+      <p><strong>Experience Required:</strong> {{ drive.experience_required }}</p>
+      <p><small class="text-muted">Deadline: {{ drive.application_deadline }}</small></p>
+      <a href="{{ url_for('apply_drive', drive_id=drive.id) }}" class="btn btn-danger">Apply</a>
     </div>
   </div>
   {% endfor %}
-</div>
-
-<!-- Available Drives -->
-<h4 class="mt-4">Available Drives</h4>
-{% if drives %}
-{% for drive in drives %}
-<div class="card mb-3">
-  <div class="card-body">
-    <h5 class="card-title">{{ drive.job_title }}</h5>
-    <p>{{ drive.description }}</p>
-    <p><strong>Salary Range:</strong> {{ drive.salary_range }}</p>
-    <p><strong>Required Skills:</strong> {{ drive.required_skills }}</p>
-    <p><strong>Experience Required:</strong> {{ drive.experience_required }}</p>
-    <p><small class="text-muted">Deadline: {{ drive.application_deadline }}</small></p>
-    <a href="{{ url_for('apply_drive', drive_id=drive.id) }}" class="btn btn-danger">Apply</a>
-  </div>
-</div>
-{% endfor %}
-{% else %}
-<div class="card mb-3">
-  <div class="card-body">
-    <h5 class="card-title">Software Engineer Intern</h5>
-    <p>Work on exciting projects with our development team.</p>
-    <p><strong>Salary Range:</strong> ₹30,000 - ₹40,000/month</p>
-    <p><strong>Required Skills:</strong> Python, Flask, SQL</p>
-    <p><strong>Experience Required:</strong> 0-1 years</p>
-    <p><small class="text-muted">Deadline: 31 March 2026</small></p>
-    <a href="#" class="btn btn-secondary disabled">Apply (Demo)</a>
-  </div>
-</div>
-{% endif %}
-
-  <!-- Search Bar -->
-  <form method="GET" action="{{ url_for('search') }}" class="mb-3">
-    <div class="input-group">
-      <input type="text" class="form-control" name="query" placeholder="Search jobs by company, position, or skills">
-      <button class="btn btn-primary" type="submit">Search</button>
-    </div>
-  </form>
-
-  {% if drives %}
-    {% for drive in drives %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">{{ drive.job_title }}</h5>
-        <p>{{ drive.description }}</p>
-        <p><strong>Salary Range:</strong> {{ drive.salary_range }}</p>
-        <p><strong>Required Skills:</strong> {{ drive.required_skills }}</p>
-        <p><strong>Experience Required:</strong> {{ drive.experience_required }}</p>
-        <p><small class="text-muted">Deadline: {{ drive.application_deadline }}</small></p>
-        <a href="{{ url_for('apply_drive', drive_id=drive.id) }}" class="btn btn-success">Apply</a>
-      </div>
-    </div>
-    {% endfor %}
   {% else %}
-    <p>No drives available at the moment.</p>
+  <div class="card glass-card mb-3 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">Software Engineer Intern</h5>
+      <p>Work on exciting projects with our development team.</p>
+      <p><strong>Salary Range:</strong> ₹30,000 - ₹40,000/month</p>
+      <p><strong>Required Skills:</strong> Python, Flask, SQL</p>
+      <p><strong>Experience Required:</strong> 0-1 years</p>
+      <p><small class="text-muted">Deadline: 31 March 2026</small></p>
+      <a href="#" class="btn btn-secondary disabled">Apply (Demo)</a>
+    </div>
+  </div>
   {% endif %}
 
   <!-- Applied Jobs -->
-  <h4 class="mt-4">Applied Jobs</h4>
+  <h4 class="mt-4 text-white fw-bold">Applied Jobs</h4>
   {% if applications %}
-    {% for application in applications %}
-    <div class="card mb-3 shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">{{ application.drive.job_title }}</h5>
-        <p>Status: {{ application.status.value }}</p>
-      </div>
+  {% for application in applications %}
+  <div class="card glass-card mb-3 shadow-sm">
+    <div class="card-body">
+      <h5 class="card-title">{{ application.drive.job_title }}</h5>
+      <p>Status: {{ application.status.value }}</p>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
   {% else %}
-    <p>You haven't applied to any drives yet.</p>
+  <p class="text-white">You haven't applied to any drives yet.</p>
   {% endif %}
 
 </div>

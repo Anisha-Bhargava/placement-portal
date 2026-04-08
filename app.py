@@ -8,6 +8,12 @@ from functools import wraps
 from werkzeug.utils import secure_filename
 from flask import abort
 import os
+import matplotlib
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
+import io
+import base64
 
 app = Flask(__name__)
 os.makedirs(app.instance_path, exist_ok=True)
@@ -100,6 +106,34 @@ def seed_data():
 
     print("Sample data seeded successfully.")
 
+def generate_admin_summary_chart(total_students, total_companies, total_drives, total_applications):
+    import matplotlib.pyplot as plt
+    import io, base64
+
+    labels = ['Students', 'Companies', 'Drives', 'Applications']
+    values = [total_students, total_companies, total_drives, total_applications]
+
+    fig, ax = plt.subplots(figsize=(5, 4))  # 🔥 smaller size
+
+    ax.pie(
+        values,
+        labels=labels,
+        autopct='%1.0f%%',   # cleaner percentages
+        startangle=90,
+        textprops={'fontsize': 10}  # 🔥 smaller text
+    )
+
+    ax.set_title("Summary", fontsize=12)  # 🔥 smaller title
+
+    plt.tight_layout()
+
+    img = io.BytesIO()
+    plt.savefig(img, format='png', dpi=100)  # 🔥 better clarity
+    img.seek(0)
+    plt.close(fig)
+
+    return base64.b64encode(img.getvalue()).decode()
+
 
 def role_required(required_role):
     def decorator(f):
@@ -117,22 +151,27 @@ def role_required(required_role):
 # Home route
 @app.route("/")
 def home():
-    return render_template("home.html")
+    return redirect(url_for("login"))
 
 #Student Registeration
 @app.route("/register/student", methods=["GET", "POST"])
 def register_student():
     if request.method == "POST":
         data = request.form
+
         student = Student(
             name=data["name"],
             email=data["email"],
             roll_number=data["roll_number"],
             course=data["course"],
             phone=data.get("phone"),
-            skills=data.get("skills")
+            skills=data.get("skills"),
+            department=data["department"],
+            year_of_study=int(data["year_of_study"])
         )
+
         student.set_password(data["password"])
+
         file = request.files.get("resume")
         if file and file.filename != "":
             filename = secure_filename(file.filename)
@@ -143,10 +182,20 @@ def register_student():
 
         db.session.add(student)
         db.session.commit()
-        return redirect(url_for("login"))
 
-    return render_template("student_register.html", form_title="Student Registration", form_action="/register/student", student=None)
+        session["user_id"] = student.id
+        session["user_role"] = student.role.value
 
+        return redirect(f"/dashboard/{student.role.value}")
+
+    return render_template(
+        "student/StudentRegister.html",
+        form_title="Student Registration",
+        form_action="/register/student",
+        student=None
+    )
+    
+    
 #Profile Editing
 @app.route("/student/profiles/<int:id>", methods=["GET", "POST"])
 @role_required(Role.STUDENT)
@@ -179,12 +228,18 @@ def student_profile(id):
 @app.route("/register/company", methods=["GET", "POST"])
 def register_company():
     if request.method == "POST":
-        data=request.form
+        data = request.form
 
         if Company.query.filter_by(email=data['email']).first():
-            return "Email already registered. Please use a different email.", 400
-        
-        #Create company
+            return render_template(
+                "company/CompanyRegister.html",
+                form_title="Company Registration",
+                form_action=url_for("register_company"),
+                company=None,
+                error="Email already registered. Please use a different email.",
+                success=None
+            )
+
         company = Company(
             name=data['name'],
             email=data['email'],
@@ -193,15 +248,22 @@ def register_company():
             website=data['website'],
             approval_status=Approvalstatus.PENDING
         )
-        
+
         company.set_password(data['password'])
-        
+
         db.session.add(company)
         db.session.commit()
 
-        return redirect(url_for('login'))
-    return render_template("company/CompanyRegister.html",error="error", success="success")
+        return redirect(url_for('company_login'))
 
+    return render_template(
+        "company/CompanyRegister.html",
+        form_title="Company Registration",
+        form_action=url_for("register_company"),
+        company=None,
+        error=None,
+        success=None
+    )
 
 # login
 @app.route("/login", methods=["GET", "POST"])
@@ -234,6 +296,20 @@ def login():
         return redirect(f"/dashboard/{user.role.value}")
     return render_template("login.html")
 
+@app.route("/login/admin", methods=["GET", "POST"])
+def admin_login():
+    return render_template("admin/admin_login.html")
+
+
+@app.route("/login/student", methods=["GET", "POST"])
+def student_login():
+    return render_template("student/student_login.html")
+
+
+@app.route("/login/company", methods=["GET", "POST"])
+def company_login():
+    return render_template("company/company_login.html")
+
 
 @app.route("/logout")
 def logout():
@@ -250,22 +326,39 @@ def admin_dashboard():
     total_companies = Company.query.count()
     total_placementdrives = PlacementDrive.query.count()
     total_applications = Application.query.count()   
+
     pending_companies = Company.query.filter_by(approval_status=Approvalstatus.PENDING).all()
     all_companies = Company.query.all()
     all_students = Student.query.all()
-    ongoing_drives = PlacementDrive.query.filter(PlacementDrive.application_deadline >= db.func.current_date()).all()
-    recent_applications = Application.query.order_by(Application.applied_at.desc()).limit(10).all()
-    
-    return render_template("admin/AdminDashboard.html", pending_companies=pending_companies,
-                            all_companies=all_companies, 
-                            all_students=all_students, 
-                            ongoing_drives=ongoing_drives, 
-                            recent_applications=recent_applications,
-                            total_students=total_students, 
-                           total_companies=total_companies, 
-                           total_drives=total_placementdrives, 
-                           total_applications=total_applications,
-                           admin_name=session['user_id'])
+
+    ongoing_drives = PlacementDrive.query.filter(
+        PlacementDrive.application_deadline >= db.func.current_date()
+    ).all()
+
+    recent_applications = Application.query.order_by(
+        Application.applied_at.desc()
+    ).limit(10).all()
+    graph_url = generate_admin_summary_chart(
+        total_students,
+        total_companies,
+        total_placementdrives,
+        total_applications
+    )
+
+    return render_template(
+        "admin/AdminDashboard.html",
+        pending_companies=pending_companies,
+        all_companies=all_companies,
+        all_students=all_students,
+        ongoing_drives=ongoing_drives,
+        recent_applications=recent_applications,
+        total_students=total_students,
+        total_companies=total_companies,
+        total_drives=total_placementdrives,
+        total_applications=total_applications,
+        admin_name=session['user_id'],
+        graph_url=graph_url
+    )
     
     
 @app.route("/admin/company/<int:id>/approve")
@@ -305,11 +398,16 @@ def toggle_blacklist(id):
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
-@app.route("/search") 
+@app.route("/search")
 def search():
-    query = request.args.get('q', '')
-    #Admin role search
-    if session.get('user_role') == "admin":
+    if 'user_id' not in session or 'user_role' not in session:
+        return redirect(url_for('login'))
+
+    query = request.args.get('q', '').strip()
+    role = session.get('user_role')
+
+    # Admin search
+    if role == "admin":
         if not query:
             return render_template(
                 "admin/search_results.html",
@@ -325,12 +423,11 @@ def search():
         ).all()
 
         companies = Company.query.filter(
-                (Company.company_name.ilike(f'%{query}%')) |
-                (Company.email.ilike(f'%{query}%')) |
-                (Company.phone.ilike(f'%{query}%')) |
-                (Company.website.ilike(f'%{query}%')) |
-                (Company.hr_contact.ilike(f'%{query}%'))
-            ).all()
+            (Company.company_name.ilike(f'%{query}%')) |
+            (Company.email.ilike(f'%{query}%')) |
+            (Company.website.ilike(f'%{query}%')) |
+            (Company.hr_contact.ilike(f'%{query}%'))
+        ).all()
 
         return render_template(
             "admin/search_results.html",
@@ -338,25 +435,53 @@ def search():
             companies=companies,
             query=query
         )
-    
-    # Student role search
-    elif session['user_role'] == "student":
+
+    # Student search
+    elif role == "student":
         if not query:
-            # If query is empty, return all approved drives
             drives = PlacementDrive.query.filter(
                 PlacementDrive.approval_status == Approvalstatus.APPROVED,
                 PlacementDrive.status != Drivestatus.COMPLETED
             ).all()
         else:
-            # Search by job title, company name, or description
-            drives = PlacementDrive.query.filter(
+            drives = PlacementDrive.query.join(Company).filter(
                 PlacementDrive.approval_status == Approvalstatus.APPROVED,
                 PlacementDrive.status != Drivestatus.COMPLETED,
-                (PlacementDrive.job_title.ilike(f"%{query}%")) |
-                (PlacementDrive.company_id.ilike(f"%{query}%")) |
-                (PlacementDrive.job_description.ilike(f"%{query}%"))
+                (
+                    PlacementDrive.job_title.ilike(f"%{query}%") |
+                    PlacementDrive.job_description.ilike(f"%{query}%") |
+                    PlacementDrive.required_skills.ilike(f"%{query}%") |
+                    PlacementDrive.eligibility_criteria.ilike(f"%{query}%") |
+                    Company.company_name.ilike(f"%{query}%")
+                )
             ).all()
-        return render_template("student/searchJobs.html",drives=drives,query=query)
+
+        return render_template(
+            "student/searchJobs.html",
+            drives=drives,
+            query=query
+        )
+
+    # Company search
+    elif role == "company":
+        company_id = session.get('user_id')
+
+    if not query:
+        drives = PlacementDrive.query.filter_by(company_id=company_id).all()
+    else:
+        drives = PlacementDrive.query.filter(
+            PlacementDrive.company_id == company_id,
+            PlacementDrive.job_title.ilike(f"%{query}%")
+        ).all()
+
+    return render_template(
+        "company/search_company.html",
+        drives=drives,
+        query=query,
+        Drivestatus=Drivestatus
+    )
+
+    return redirect(url_for('login'))
     
     
 # Student Dashboard
