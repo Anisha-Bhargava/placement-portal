@@ -95,18 +95,18 @@ class PlacementDrive(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('companies.id', ondelete='CASCADE'), nullable=False)
-    job_title= db.Column(db.String(150), nullable=False)
+    job_title = db.Column(db.String(150), nullable=False)
     job_description = db.Column(db.Text, nullable=True)
-
     eligibility_criteria = db.Column(db.String(200), nullable=True)
     application_deadline = db.Column(db.DateTime, nullable=False)
     salary_range = db.Column(db.String(100), nullable=True)
     required_skills = db.Column(db.String(200), nullable=True)
     experience_required = db.Column(db.String(100), nullable=True)
-    
-    status = db.Column(db.Enum(Drivestatus), default=Drivestatus.UPCOMING.value, nullable=False)
 
-    applications = db.relationship('Application', backref='drive', lazy=True,cascade="all, delete-orphan")
+    status = db.Column(db.Enum(Drivestatus), default=Drivestatus.UPCOMING, nullable=False)
+    approval_status = db.Column(db.Enum(Approvalstatus), default=Approvalstatus.PENDING, nullable=False)
+
+    applications = db.relationship('Application', backref='drive', lazy=True, cascade="all, delete-orphan")
 
     approval_status = db.Column(db.Enum(Approvalstatus), default=Approvalstatus.PENDING)
     def __repr__(self):

@@ -196,7 +196,7 @@ def register_student():
     )
     
     
-#Profile Editing
+#Profile ko edit
 @app.route("/student/profiles/<int:id>", methods=["GET", "POST"])
 @role_required(Role.STUDENT)
 def student_profile(id):
@@ -321,46 +321,61 @@ def logout():
 @app.route("/dashboard/admin")
 @role_required(Role.ADMIN)
 def admin_dashboard():
-    
+    admin = Admin.query.get(session["user_id"])
+
     total_students = Student.query.count()
     total_companies = Company.query.count()
-    total_placementdrives = PlacementDrive.query.count()
-    total_applications = Application.query.count()   
+    total_drives = PlacementDrive.query.count()
+    total_applications = Application.query.count()
 
-    pending_companies = Company.query.filter_by(approval_status=Approvalstatus.PENDING).all()
+    pending_companies = Company.query.filter_by(
+        approval_status=Approvalstatus.PENDING
+    ).all()
     all_companies = Company.query.all()
     all_students = Student.query.all()
 
     ongoing_drives = PlacementDrive.query.filter(
-        PlacementDrive.application_deadline >= db.func.current_date()
+    PlacementDrive.approval_status == Approvalstatus.APPROVED,
+    PlacementDrive.status == Drivestatus.ONGOING
     ).all()
-
+    pending_drives = PlacementDrive.query.filter(
+    PlacementDrive.approval_status == Approvalstatus.PENDING
+    ).all()
+    upcoming_drives = PlacementDrive.query.filter(
+    PlacementDrive.approval_status == Approvalstatus.APPROVED,
+    PlacementDrive.status == Drivestatus.UPCOMING
+    ).all()
+    
+    
     recent_applications = Application.query.order_by(
         Application.applied_at.desc()
     ).limit(10).all()
+
     graph_url = generate_admin_summary_chart(
         total_students,
         total_companies,
-        total_placementdrives,
+        total_drives,
         total_applications
     )
 
     return render_template(
-        "admin/AdminDashboard.html",
-        pending_companies=pending_companies,
-        all_companies=all_companies,
-        all_students=all_students,
-        ongoing_drives=ongoing_drives,
-        recent_applications=recent_applications,
-        total_students=total_students,
-        total_companies=total_companies,
-        total_drives=total_placementdrives,
-        total_applications=total_applications,
-        admin_name=session['user_id'],
-        graph_url=graph_url
-    )
-    
-    
+    "admin/AdminDashboard.html",
+    total_students=total_students,
+    total_companies=total_companies,
+    total_drives=total_drives,
+    total_applications=total_applications,
+    pending_companies=pending_companies,
+    pending_drives=pending_drives,
+    all_companies=all_companies,
+    all_students=all_students,
+    ongoing_drives=ongoing_drives,
+    upcoming_drives=upcoming_drives,
+    recent_applications=recent_applications,
+    graph_url=graph_url,
+    admin_name=admin.name
+)
+
+   
 @app.route("/admin/company/<int:id>/approve")
 @role_required(Role.ADMIN)
 def approve_company(id):
@@ -491,8 +506,8 @@ def student_dashboard():
     student = Student.query.get(session['user_id'])
 
     drives = PlacementDrive.query.filter(
-        PlacementDrive.approval_status == Approvalstatus.APPROVED,
-        PlacementDrive.status != Drivestatus.COMPLETED
+    PlacementDrive.approval_status == Approvalstatus.APPROVED,
+    PlacementDrive.status == Drivestatus.ONGOING
     ).all()
     
     company = Company.query.all()
@@ -520,17 +535,21 @@ def company_dashboard():
     company = Company.query.get(session['user_id'])
     drives = PlacementDrive.query.filter_by(company_id=company.id).all()
     total_drives = len(drives)
-    total_applications = Application.query.join(PlacementDrive).filter(
+
+    all_applications = Application.query.join(PlacementDrive).filter(
         PlacementDrive.company_id == company.id
-    ).count()
-    
+    ).all()
+
+    total_applications = len(all_applications)
+
     return render_template(
         "company/CompanyDashboard.html",
         company=company,
         drives=drives,
         total_drives=total_drives,
         total_applications=total_applications,
-        Drivestatus=Drivestatus   #imp
+        all_applications=all_applications,
+        Drivestatus=Drivestatus
     )
 
 @app.route("/company/drive/create", methods=["GET", "POST"])
@@ -588,11 +607,13 @@ def view_applications(id):
 @app.route("/company/application/<int:id>/update", methods=["POST"])
 @role_required(Role.COMPANY)
 def update_application_status(id):
-    
     application = Application.query.get_or_404(id)
+
     if application.drive.company_id != session['user_id']:
         abort(403)
+
     status = request.form.get("status")
+
     if status == "Shortlisted":
         application.status = Applicationstatus.SHORTLISTED
     elif status == "Accepted":
@@ -601,18 +622,153 @@ def update_application_status(id):
         application.status = Applicationstatus.REJECTED
     else:
         abort(400)
+
     db.session.commit()
-    return redirect(url_for("view_applications", id=application.drive_id))
+    return redirect(url_for("company_dashboard"))
+
+@app.route("/company/application/<int:id>/blacklist", methods=["POST"])
+@role_required(Role.COMPANY)
+def company_blacklist_student(id):
+    application = Application.query.get_or_404(id)
+
+    if application.drive.company_id != session['user_id']:
+        abort(403)
+
+    application.student.blacklist = not application.student.blacklist
+
+    if application.student.blacklist:
+        application.status = Applicationstatus.REJECTED
+
+    db.session.commit()
+    return redirect(url_for("company_dashboard"))
 
 
-@app.route("/admin/drive/<int:id>/approve")
+@app.route("/admin/drive/<int:id>/approve", methods=["POST"])
 @role_required(Role.ADMIN)
 def approve_drive(id):
     drive = PlacementDrive.query.get_or_404(id)
-    drive.status = Drivestatus.UPCOMING
+    print("APPROVE CLICKED FOR DRIVE:", drive.id, drive.job_title)
     drive.approval_status = Approvalstatus.APPROVED
+    drive.status = Drivestatus.ONGOING
+    db.session.commit()
+    print("UPDATED:", drive.approval_status, drive.status)
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/drive/<int:id>/reject", methods=["POST"])
+@role_required(Role.ADMIN)
+def reject_drive(id):
+    drive = PlacementDrive.query.get_or_404(id)
+    drive.approval_status = Approvalstatus.REJECTED
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route("/admin/past-drives")
+@role_required(Role.ADMIN)
+def admin_past_drives():
+    past_drives = PlacementDrive.query.filter(
+        PlacementDrive.status == Drivestatus.COMPLETED
+    ).order_by(PlacementDrive.application_deadline.desc()).all()
+
+    return render_template(
+        "admin/past_drives.html",
+        past_drives=past_drives
+    )
+    
+@app.route("/admin/upcoming-drives")
+@role_required(Role.ADMIN)
+def admin_upcoming_drives():
+    upcoming_drives = PlacementDrive.query.filter(
+        PlacementDrive.approval_status == Approvalstatus.APPROVED,
+        PlacementDrive.status == Drivestatus.UPCOMING
+    ).all()
+
+    return render_template(
+        "admin/upcoming_drives.html",
+        upcoming_drives=upcoming_drives
+    ) 
+    
+    
+@app.route("/admin/add-dummy-past-drives")
+@role_required(Role.ADMIN)
+def add_dummy_past_drives():
+
+    company = Company.query.first()   
+    if not company:
+        return "No company found!"
+    
+    existing = PlacementDrive.query.filter_by(
+        status=Drivestatus.COMPLETED
+    ).first()
+
+    if existing:
+        return "Dummy data already exists!"
+
+    drive1 = PlacementDrive(
+        company_id=company.id,
+        job_title="Backend Developer",
+        job_description="Flask backend development role",
+        eligibility_criteria="CSE, 7+ CGPA",
+        application_deadline=datetime(2025, 12, 20, 23, 59),
+        salary_range="8 LPA",
+        required_skills="Python, Flask, SQL",
+        experience_required="Fresher",
+        status=Drivestatus.COMPLETED,
+        approval_status=Approvalstatus.APPROVED
+    )
+
+    drive2 = PlacementDrive(
+        company_id=company.id,
+        job_title="Data Analyst",
+        job_description="Data analysis and reporting",
+        eligibility_criteria="All branches, 6.5+ CGPA",
+        application_deadline=datetime(2025, 11, 15, 23, 59),
+        salary_range="5 LPA",
+        required_skills="Excel, SQL, Python",
+        experience_required="Fresher",
+        status=Drivestatus.COMPLETED,
+        approval_status=Approvalstatus.APPROVED
+    )
+
+    db.session.add_all([drive1, drive2])
+    db.session.commit()
+    
+
+    return "Dummy past drives added successfully!"
+
+
+@app.route("/admin/add-dummy-upcoming-drive")
+@role_required(Role.ADMIN)
+def add_dummy_upcoming_drive():
+    company = Company.query.filter_by(approval_status=Approvalstatus.APPROVED).first()
+    if not company:
+        return "No approved company found!"
+
+    existing = PlacementDrive.query.filter_by(
+        job_title="Frontend Developer Intern"
+    ).first()
+
+    if existing:
+        return "Dummy upcoming drive already exists!"
+
+    drive = PlacementDrive(
+        company_id=company.id,
+        job_title="Frontend Developer Intern",
+        job_description="Frontend role using HTML, CSS, JavaScript and React.",
+        eligibility_criteria="CSE/IT, 6.5+ CGPA",
+        application_deadline=datetime(2026, 5, 25, 23, 59),
+        salary_range="6 LPA",
+        required_skills="HTML, CSS, JavaScript, React",
+        experience_required="Fresher",
+        status=Drivestatus.UPCOMING,
+        approval_status=Approvalstatus.APPROVED
+    )
+
+    db.session.add(drive)
+    db.session.commit()
+
+    return "Dummy upcoming drive added successfully!"
+
 
 @app.route("/student/apply/<int:drive_id>")
 def apply_drive(drive_id):
@@ -620,7 +776,7 @@ def apply_drive(drive_id):
     # drive_id = request.view_args['drive_id']
     drive=PlacementDrive.query.get_or_404(drive_id)
 
-    if drive.approval_status != Approvalstatus.APPROVED or drive.status == Drivestatus.COMPLETED:
+    if drive.approval_status != Approvalstatus.APPROVED or drive.status != Drivestatus.ONGOING:
         return "This drive is not open for applications.", 400
 
     existing_application = Application.query.filter_by(student_id=student_id, drive_id=drive_id).first()

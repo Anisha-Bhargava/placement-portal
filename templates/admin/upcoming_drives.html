@@ -1,0 +1,42 @@
+{% extends "index.html" %}
+{% block title %}Upcoming Drives{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+      Upcoming Placement Drives
+    </div>
+
+    <div class="card-body table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Job</th>
+            <th>Company</th>
+            <th>Deadline</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in upcoming_drives %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ d.job_title }}</td>
+            <td>{{ d.company.company_name }}</td>
+            <td>{{ d.application_deadline.strftime('%d-%m-%Y') }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center">No upcoming drives</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

@@ -42,11 +42,11 @@
     </div>
 
     <div class="col-md-4 d-flex">
-  <div class="card shadow-sm w-100 d-flex flex-column justify-content-center text-center border-0 total-app-card">
-    <h5 class="mb-2">Total Applications</h5>
-    <h2 class="fw-bold display-5 mb-0">{{ total_applied }}</h2>
-  </div>
-</div>
+      <div class="card shadow-sm w-100 d-flex flex-column justify-content-center text-center border-0 total-app-card">
+        <h5 class="mb-2">Total Applications</h5>
+        <h2 class="fw-bold display-5 mb-0">{{ total_applied }}</h2>
+      </div>
+    </div>
   </div>
 
   <!-- Student Details Modal -->
@@ -185,49 +185,98 @@
 
   <!-- Available Drives -->
   <h4 class="mt-4 text-white fw-bold">Available Drives</h4>
-  {% if drives %}
-  {% for drive in drives %}
-  <div class="card glass-card mb-3 shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title">{{ drive.job_title }}</h5>
-      <p>{{ drive.description }}</p>
-      <p><strong>Salary Range:</strong> {{ drive.salary_range }}</p>
-      <p><strong>Required Skills:</strong> {{ drive.required_skills }}</p>
-      <p><strong>Experience Required:</strong> {{ drive.experience_required }}</p>
-      <p><small class="text-muted">Deadline: {{ drive.application_deadline }}</small></p>
-      <a href="{{ url_for('apply_drive', drive_id=drive.id) }}" class="btn btn-danger">Apply</a>
+
+  <div class="row">
+    {% if drives %}
+    {% for drive in drives %}
+
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-lg border-0 p-3 h-100 glass-card">
+
+
+        <h5 class="fw-bold mb-1">{{ drive.job_title }}</h5>
+
+        <p class="text-muted mb-2">
+          <i class="bi bi-building"></i> {{ drive.company.company_name }}
+        </p>
+
+        <p class="mb-1">
+          💰 <strong>{{ drive.salary_range }}</strong>
+        </p>
+
+        <p class="mb-3">
+          🧑‍💻 {{ drive.experience_required }}
+        </p>
+
+
+        <a href="{{ url_for('apply_drive', drive_id=drive.id) }}" class="btn btn-danger mt-auto">
+          Apply
+        </a>
+
+      </div>
     </div>
+
+    {% endfor %}
+    {% else %}
+    <p class="text-white">No drives available.</p>
+    {% endif %}
   </div>
-  {% endfor %}
-  {% else %}
-  <div class="card glass-card mb-3 shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title">Software Engineer Intern</h5>
-      <p>Work on exciting projects with our development team.</p>
-      <p><strong>Salary Range:</strong> ₹30,000 - ₹40,000/month</p>
-      <p><strong>Required Skills:</strong> Python, Flask, SQL</p>
-      <p><strong>Experience Required:</strong> 0-1 years</p>
-      <p><small class="text-muted">Deadline: 31 March 2026</small></p>
-      <a href="#" class="btn btn-secondary disabled">Apply (Demo)</a>
-    </div>
-  </div>
-  {% endif %}
 
   <!-- Applied Jobs -->
   <h4 class="mt-4 text-white fw-bold">Applied Jobs</h4>
   {% if applications %}
   {% for application in applications %}
-  <div class="card glass-card mb-3 shadow-sm">
-    <div class="card-body">
-      <h5 class="card-title">{{ application.drive.job_title }}</h5>
-      <p>Status: {{ application.status.value }}</p>
+  <div class="row">
+    <div class="col-md-6 col-lg-5">
+      <div class="card glass-card mb-3 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-1">{{ application.drive.job_title }}</h5>
+
+          <p class="mb-2 text-secondary">
+            <strong>Company:</strong> {{ application.drive.company.company_name }}
+          </p>
+
+          <p class="mb-1">
+            <strong>Applied On:</strong> {{ application.applied_at.strftime('%d %b %Y, %I:%M %p') if
+            application.applied_at else 'N/A' }}
+          </p>
+
+          <p class="mb-2">
+            <strong>Current Status:</strong>
+            {% if application.status.name == "APPLIED" %}
+            <span class="badge bg-primary">Applied</span>
+            {% elif application.status.name == "SHORTLISTED" %}
+            <span class="badge bg-info text-dark">Shortlisted</span>
+            {% elif application.status.name == "ACCEPTED" %}
+            <span class="badge bg-success">Selected</span>
+            {% elif application.status.name == "REJECTED" %}
+            <span class="badge bg-danger">Rejected</span>
+            {% else %}
+            <span class="badge bg-secondary">{{ application.status.value }}</span>
+            {% endif %}
+          </p>
+
+          <p class="mb-0">
+            <strong>Final Outcome:</strong>
+            {% if application.status.name == "ACCEPTED" %}
+            <span class="text-success fw-bold">Selected</span>
+            {% elif application.status.name == "REJECTED" %}
+            <span class="text-danger fw-bold">Not Selected</span>
+            {% elif application.status.name == "SHORTLISTED" %}
+            <span class="text-warning fw-bold">In Progress</span>
+            {% else %}
+            <span class="text-muted">Pending</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="text-white">You haven't applied to any drives yet.</p>
+      {% endif %}
+
     </div>
   </div>
-  {% endfor %}
-  {% else %}
-  <p class="text-white">You haven't applied to any drives yet.</p>
-  {% endif %}
-
 </div>
-
+</div>
 {% endblock %}

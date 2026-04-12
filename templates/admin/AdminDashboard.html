@@ -14,42 +14,42 @@
     </div>
 
     <div class="row g-4 mb-5">
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Total Students</h5>
-                    <h4 class="card-text fw-bold display-4">{{ total_students }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Total Companies</h5>
-                    <h4 class="card-text fw-bold display-4">{{ total_companies }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Total Drives</h5>
-                    <h4 class="card-text fw-bold display-4">{{ total_drives }}</h4>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 text-center">
-                <div class="card-body">
-                    <h5 class="card-title">Total Applications</h5>
-                    <h4 class="card-text fw-bold display-4">{{ total_applications }}</h4>
-                </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Total Students</h5>
+                <h4 class="fw-bold display-4 text-dark">{{ total_students }}</h4>
             </div>
         </div>
     </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Total Companies</h5>
+                <h4 class="fw-bold display-4 text-dark">{{ total_companies }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Total Drives</h5>
+                <h4 class="fw-bold display-4 text-dark">{{ total_drives }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Total Applications</h5>
+                <h4 class="fw-bold display-4 text-dark">{{ total_applications }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
 
     {% include "admin/registeredCompanies.html" %}
 
@@ -58,6 +58,47 @@
     {% include "admin/ongoingPlacementdrive.html" %}
 
     {% include "admin/recent_application.html" %}
+
+    <div class="card shadow-sm mb-5">
+    <div class="card-header bg-dark text-white">
+        Pending Placement Drives
+    </div>
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Sr. No</th>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Deadline</th>
+                    <th>Approval Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for drive in pending_drives %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ drive.job_title }}</td>
+                    <td>{{ drive.company.company_name }}</td>
+                    <td>{{ drive.application_deadline.strftime('%d-%m-%Y') }}</td>
+                    <td class="d-flex gap-2">
+                        <form method="POST" action="{{ url_for('approve_drive', id=drive.id) }}">
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reject_drive', id=drive.id) }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No pending placement drives.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
     <!-- Graph Section -->
     <div class="card shadow-sm mb-5">

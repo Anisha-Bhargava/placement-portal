@@ -1,0 +1,44 @@
+{% extends "index.html" %}
+{% block title %}Past Drives{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-dark text-white">
+            Past Placement Drives
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sr. No</th>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for drive in past_drives %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ drive.job_title }}</td>
+                        <td>{{ drive.company.company_name }}</td>
+                        <td>{{ drive.application_deadline.strftime('%d-%m-%Y') }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ drive.status.value }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            No past drives available.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

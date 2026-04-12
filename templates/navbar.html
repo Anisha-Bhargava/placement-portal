@@ -4,8 +4,7 @@
 
     <a class="navbar-brand fw-bold" href="#">Placement Portal</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
-      aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -17,6 +16,15 @@
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin_past_drives') }}">Past Drives</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('admin_upcoming_drives') }}">
+            Upcoming Drives
+          </a>
+        </li>
         {% endif %}
 
         {% if session.get('user_role') == 'student' %}
@@ -24,9 +32,12 @@
           <a class="nav-link" href="{{ url_for('student_dashboard') }}">Dashboard</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('student_profile', id=session.get('user_id')) }}">Profile</a>
+          <a class="nav-link" href="{{ url_for('student_profile', id=session.get('user_id')) }}">
+            Profile
+          </a>
         </li>
         {% endif %}
+
 
         {% if session.get('user_role') == 'company' %}
         <li class="nav-item">
@@ -39,19 +50,24 @@
 
       </ul>
 
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-3 ms-auto">
+
         {% if session.get('user_role') in ['admin', 'student', 'company'] %}
+
         <form class="d-flex" role="search" action="{{ url_for('search') }}" method="GET">
-          <input class="form-control me-2" type="search" name="q" placeholder="Search..." aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
+          <input class="form-control me-2" type="search" name="q" placeholder="Search...">
+          <button class="btn btn-outline-success">Search</button>
         </form>
         {% endif %}
 
-        <span class="text-white me-2">
+
+        <span class="text-white fw-semibold">
           {{ session.get('user_role') | capitalize }}
         </span>
 
+
         <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+
       </div>
 
     </div>

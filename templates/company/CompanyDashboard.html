@@ -11,15 +11,17 @@
             <div class="card shadow-sm p-3 text-center">
                 <i class="bi bi-briefcase-fill fs-2 text-primary"></i>
                 <h5>Total Drives</h5>
-                <h3>{{ total_drives }}</h3>
+                <h3 style="color:#000 !important; font-weight:700;">{{ total_drives }}</h3>
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow-sm p-3 text-center">
+            <div class="card shadow-sm p-3 text-center applications-card" style="cursor: pointer;"
+                data-bs-toggle="modal" data-bs-target="#applicationsModal">
                 <i class="bi bi-people-fill fs-2 text-success"></i>
                 <h5>Total Applications</h5>
-                <h3>{{ total_applications }}</h3>
+                <h3 style="color:#000 !important; font-weight:700;">{{ total_applications }}</h3>
+                <small class="text-muted">Click to view applicants</small>
             </div>
         </div>
 
@@ -32,9 +34,95 @@
         </div>
     </div>
 
+    {% include "company/CompanyDrives.html" %}
+</div>
 
-    {% include "company/CompanyDrives.html" %}  
+<!-- Total Applications Modal -->
+<div class="modal fade" id="applicationsModal" tabindex="-1" aria-labelledby="applicationsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="applicationsModalLabel">All Applications ({{ total_applications }})</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                {% if all_applications %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Drive</th>
+                                <th>Current Status</th>
+                                <th>Blacklist</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for application in all_applications %}
+                            <tr>
+                                <td>{{ application.student.name }}</td>
+                                <td>{{ application.student.email }}</td>
+                                <td>{{ application.drive.job_title }}</td>
+                                <td>
+                                    {% if application.status.name == "APPLIED" %}
+                                    <span class="badge bg-primary">Applied</span>
+                                    {% elif application.status.name == "SHORTLISTED" %}
+                                    <span class="badge bg-info text-dark">Shortlisted</span>
+                                    {% elif application.status.name == "ACCEPTED" %}
+                                    <span class="badge bg-success">Accepted</span>
+                                    {% elif application.status.name == "REJECTED" %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ application.status.name }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if application.student.blacklist %}
+                                    <span class="badge bg-dark">Blacklisted</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                                        <form method="POST"
+                                            action="{{ url_for('update_application_status', id=application.id) }}">
+                                            <select name="status" class="form-select form-select-sm"
+                                                onchange="this.form.submit()">
+                                                <option disabled selected>Change Status</option>
+                                                <option value="Accepted">Selected</option>
+                                                <option value="Shortlisted">Shortlisted</option>
+                                                <option value="Rejected">Rejected</option>
+                                            </select>
+                                        </form>
+
+                                        <form method="POST"
+                                            action="{{ url_for('company_blacklist_student', id=application.id) }}">
+                                            <button type="submit" class="btn btn-sm btn-dark">
+                                                {% if application.student.blacklist %}
+                                                Unblacklist
+                                                {% else %}
+                                                Blacklist
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No applications found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
-templates
