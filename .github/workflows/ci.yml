@@ -25,5 +25,15 @@ jobs:
       - name: Smoke test - app imports without crashing
         run: python -c "import app"
 
-      - name: Build Docker image
-        run: docker build -t placement-portal .
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/placement-portal:latest
